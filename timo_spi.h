@@ -32,6 +32,7 @@
 #define TIMO_DMX_CONTROL_REG            0x09
 #define TIMO_EXT_IRQ_MASK_REG           0x0A
 #define TIMO_EXT_IRQ_FLAGS_REG          0x0B
+#define TIMO_RF_PROTOCOL_REG            0x0C
 #define TIMO_VERSION_REG                0x10
 #define TIMO_RF_POWER_REG               0x11
 #define TIMO_BLOCKED_CHANNELS_REG       0x12
@@ -41,6 +42,13 @@
 #define TIMO_BATTERY_REG                0x32
 #define TIMO_UNIVERSE_COLOR_REG         0x33
 #define TIMO_OEM_INFO_REG               0x34
+#define TIMO_INSTALLED_OPTIONS_REG		  0x3D
+
+#define TIMO_RF_PROTO_CRMX              0
+#define TIMO_RF_PROTO_G3                1
+#define TIMO_RF_PROTO_G4S               3
+
+#define TIMO_BLE_ENABLED                (1<<0)
 
 #define TIMO_CONFIG_UART_EN             (1<<0)
 #define TIMO_CONFIG_RADIO_TX_RX_MODE    (1<<1)
@@ -56,6 +64,11 @@
 #define TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG    (1<<3)
 #define TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG    (1<<4)
 #define TIMO_EXTIRQ_SPI_RDM_DISC_FLAG      (1<<5)
+
+#define TIMO_IDENTIFY_IRQ (1 << 5)
+#define TIMO_SPI_DEVICE_BUSY_IRQ_MASK (1 << 7)
+
+#define TIMO_INSTALLED_OPTION_RDM_SPI	0x2001
 
 typedef struct {
   int csn_pin;

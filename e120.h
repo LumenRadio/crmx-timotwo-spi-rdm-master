@@ -116,6 +116,9 @@ typedef struct ALIGNED {
 
 #define PRODUCT_CATEGORY_FIXTURE    0x0100
 
+#define WDMX_RADIO_QUEUED_MESSAGE		0x8201
+#define WDMX_RADIO_PROXIED_DEVICES		0x8202
+
 typedef struct PACKED ALIGNED {
 	uint8_t	startCode;
 	uint8_t	subStartCode;
