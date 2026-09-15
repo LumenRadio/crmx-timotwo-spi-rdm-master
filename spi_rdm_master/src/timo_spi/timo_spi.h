@@ -1,6 +1,8 @@
 #ifndef TIMO_SPI_H_
 #define TIMO_SPI_H_
 
+#include <Arduino.h>
+
 #define TIMO_READ_REG_COMMAND(address) (address)
 #define TIMO_WRITE_REG_COMMAND(address) (0x40 | address)
 #define TIMO_READ_DMX_COMMAND 0x81
@@ -182,5 +184,65 @@ typedef struct {
          .write_access = 1,                                                    \
          .name = "OEM_INFO"},                                                  \
     }
+
+/* Shared TimoTwo instance and SPI scratch buffers, defined in
+ * spi_rdm_master.ino */
+extern timo_t timo;
+extern uint8_t *tx_buffer;
+extern uint8_t *rx_buffer;
+
+void timo_spi_irq_pin_handler();
+bool timo_spi_irq_is_pending();
+
+/**
+ * Makes a complete SPI transaction with the TimoTwo module
+ *
+ * Return value:   The content of the IRQ flags register, or -1 if there was no
+ * response.
+ *
+ * @param command   The TimoTwo SPI command.
+ * @param *dst      Pointer to the buffer where to store the returned data
+ * @param *src      Pointer to the buffer containing data to transfer
+ * @param len       Length in bytes. IRQ flags is included. Example: Use length
+ * 9 when reading the version register.
+ */
+int16_t timo_spi_transfer(uint8_t command, uint8_t *dst, uint8_t *src,
+                          uint32_t len);
+
+/**
+ * This is a specialized version of the SPI transfer function for RDM responses.
+ * It checks the length field of the RDM response to know how much data to
+ * transfer.
+ *
+ * Return value:   The number of bytes read, or -1 if there was no response.
+ *
+ * @param command   The TimoTwo SPI command.
+ * @param *dst      Pointer to the buffer where to store the returned data
+ * @param *src      Pointer to the buffer containing data to transfer
+ * @param max_len   Maximum length in bytes, that is - how large is the dst
+ * buffer.
+ */
+int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
+                                       uint8_t *src, uint32_t max_len);
+
+/**
+ * This function waits for an RDM response to be indicated.
+ */
+void timo_spi_wait_for_rdm_response(void);
+
+/**
+ * This function waits for a radio discovery response to be indicated.
+ */
+void timo_spi_wait_for_radio_discovery_response(void);
+
+/**
+ * This function waits for a radio mute response to be indicated.
+ */
+void timo_spi_wait_for_radio_mute_response(void);
+
+/**
+ * This function waits for an RDM discovery response to be indicated.
+ */
+void timo_spi_wait_for_rdm_discovery_response(void);
 
 #endif
