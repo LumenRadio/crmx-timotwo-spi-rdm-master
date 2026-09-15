@@ -21,3 +21,21 @@ make clean     # remove build artifacts
 ```
 
 `PORT` and `FQBN` can be overridden, e.g. `make PORT=/dev/ttyACM1 upload`.
+
+## Formatting
+Source files are formatted with `clang-format`, enforced via a [`pre-commit`](https://pre-commit.com/) hook and checked in CI on every push and pull request.
+
+To format locally before committing, create a virtual environment, activate it, and install `pre-commit` and set up the git hook once:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pre-commit
+pre-commit install
+```
+
+From then on, activate the virtual environment (`source .venv/bin/activate`) in any new shell before using `pre-commit`. `clang-format` runs automatically on `git commit`. To format everything on demand:
+
+```sh
+pre-commit run --all-files --show-diff-on-failure --color=always
+```
