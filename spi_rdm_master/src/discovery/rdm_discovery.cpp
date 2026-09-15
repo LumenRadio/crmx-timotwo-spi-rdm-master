@@ -29,7 +29,7 @@ void rdm_discovery_unmute_all() {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);
@@ -59,7 +59,7 @@ bool rdm_discovery_mute_device(uint64_t rx, uint64_t uid) {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);
@@ -108,7 +108,7 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     tx_buffer[17] = upper;
     timo_spi_transfer(TIMO_RDM_DISCOVERY, rx_buffer, tx_buffer, 19);
 
-    timo_spi_wait_for_rdm_discovery_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_DISC_FLAG);
 
     timo_spi_transfer(TIMO_RDM_DISCOVERY_RESULT, rx_buffer, tx_buffer, 8);
 
@@ -252,7 +252,7 @@ int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(uint64_t rx) {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);

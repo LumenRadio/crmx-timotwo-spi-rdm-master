@@ -27,7 +27,7 @@ void rdm_commands_print_manufacturer_label(uint64_t rx, uint64_t uid) {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);
@@ -71,7 +71,7 @@ void rdm_commands_print_device_model_description(uint64_t rx, uint64_t uid) {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);
@@ -116,7 +116,7 @@ void rdm_commands_identify(uint64_t rx, uint64_t uid, bool state) {
     timo_spi_transfer(TIMO_WRITE_RDM_COMMAND, rx_buffer, tx_buffer,
                       1 + 6 + req.messageLength + 2);
 
-    timo_spi_wait_for_rdm_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
                                    260);

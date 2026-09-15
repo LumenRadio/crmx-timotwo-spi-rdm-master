@@ -226,23 +226,10 @@ int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
                                        uint8_t *src, uint32_t max_len);
 
 /**
- * This function waits for an RDM response to be indicated.
+ * Waits for an extended IRQ whose flags register has the given bit set.
+ *
+ * @param flag   The TIMO_EXTIRQ_SPI_*_FLAG bit to wait for.
  */
-void timo_spi_wait_for_rdm_response(void);
-
-/**
- * This function waits for a radio discovery response to be indicated.
- */
-void timo_spi_wait_for_radio_discovery_response(void);
-
-/**
- * This function waits for a radio mute response to be indicated.
- */
-void timo_spi_wait_for_radio_mute_response(void);
-
-/**
- * This function waits for an RDM discovery response to be indicated.
- */
-void timo_spi_wait_for_rdm_discovery_response(void);
+void timo_spi_wait_for_extended_irq(uint32_t flag);
 
 #endif

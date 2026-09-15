@@ -144,9 +144,11 @@ int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
 }
 
 /**
- * This function waits for an RDM response to be indicated.
+ * Waits for an extended IRQ whose flags register has the given bit set.
+ *
+ * @param flag   The TIMO_EXTIRQ_SPI_*_FLAG bit to wait for.
  */
-void timo_spi_wait_for_rdm_response(void) {
+void timo_spi_wait_for_extended_irq(uint32_t flag) {
     int16_t irq_flags;
 
     while (1) {
@@ -160,10 +162,9 @@ void timo_spi_wait_for_rdm_response(void) {
                 ;
             }
 
-            /* if it's an extended IRQ it can be the RDM IRQ */
+            /* if it's an extended IRQ it can be the one we're waiting for */
             if (irq_flags & TIMO_IRQ_EXTENDED_FLAG) {
                 uint32_t ext_flags;
-                uint8_t response_length;
                 bzero(tx_buffer, 5);
                 /* read the extended flags register */
                 irq_flags = timo_spi_transfer(
@@ -173,122 +174,10 @@ void timo_spi_wait_for_rdm_response(void) {
                             ((uint32_t)rx_buffer[1] << 16) |
                             ((uint32_t)rx_buffer[2] << 8) |
                             ((uint32_t)rx_buffer[3]);
-                if (ext_flags & TIMO_EXTIRQ_SPI_RDM_FLAG) {
-                    /* it was the RDM IRQ */
+                if (ext_flags & flag) {
                     while (!timo_spi_irq_is_pending()) {
                         ;
                     }
-                    return;
-                }
-            }
-        }
-    }
-}
-
-void timo_spi_wait_for_radio_discovery_response(void) {
-    int16_t irq_flags;
-
-    while (1) {
-        if (!digitalRead(timo.irq_pin)) {
-            irq_flags =
-                timo_spi_transfer(TIMO_NOP_COMMAND, rx_buffer, tx_buffer, 0);
-
-            while (!timo_spi_irq_is_pending()) {
-                ;
-            }
-
-            if (irq_flags & TIMO_IRQ_EXTENDED_FLAG) {
-                uint32_t ext_flags;
-                uint8_t response_length;
-                bzero(tx_buffer, 5);
-                irq_flags = timo_spi_transfer(
-                    TIMO_READ_REG_COMMAND(TIMO_EXT_IRQ_FLAGS_REG), rx_buffer,
-                    tx_buffer, 5);
-                ext_flags = ((uint32_t)rx_buffer[0] << 24) |
-                            ((uint32_t)rx_buffer[1] << 16) |
-                            ((uint32_t)rx_buffer[2] << 8) |
-                            ((uint32_t)rx_buffer[3]);
-                if (ext_flags & TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG) {
-                    while (!timo_spi_irq_is_pending()) {
-                        ;
-                    }
-
-                    return;
-                }
-            }
-        }
-    }
-}
-
-/**
- * This function waits for a radio mute response to be indicated.
- */
-void timo_spi_wait_for_radio_mute_response(void) {
-    int16_t irq_flags;
-
-    while (1) {
-        if (!digitalRead(timo.irq_pin)) {
-            irq_flags =
-                timo_spi_transfer(TIMO_NOP_COMMAND, rx_buffer, tx_buffer, 0);
-
-            while (!timo_spi_irq_is_pending()) {
-                ;
-            }
-
-            if (irq_flags & TIMO_IRQ_EXTENDED_FLAG) {
-                uint32_t ext_flags;
-                uint8_t response_length;
-                bzero(tx_buffer, 5);
-                irq_flags = timo_spi_transfer(
-                    TIMO_READ_REG_COMMAND(TIMO_EXT_IRQ_FLAGS_REG), rx_buffer,
-                    tx_buffer, 5);
-                ext_flags = ((uint32_t)rx_buffer[0] << 24) |
-                            ((uint32_t)rx_buffer[1] << 16) |
-                            ((uint32_t)rx_buffer[2] << 8) |
-                            ((uint32_t)rx_buffer[3]);
-                if (ext_flags & TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG) {
-                    while (!timo_spi_irq_is_pending()) {
-                        ;
-                    }
-
-                    return;
-                }
-            }
-        }
-    }
-}
-
-/**
- * This function waits for an RDM discovery response to be indicated.
- */
-void timo_spi_wait_for_rdm_discovery_response(void) {
-    int16_t irq_flags;
-
-    while (1) {
-        if (!digitalRead(timo.irq_pin)) {
-            irq_flags =
-                timo_spi_transfer(TIMO_NOP_COMMAND, rx_buffer, tx_buffer, 0);
-
-            while (!timo_spi_irq_is_pending()) {
-                ;
-            }
-
-            if (irq_flags & TIMO_IRQ_EXTENDED_FLAG) {
-                uint32_t ext_flags;
-                uint8_t response_length;
-                bzero(tx_buffer, 5);
-                irq_flags = timo_spi_transfer(
-                    TIMO_READ_REG_COMMAND(TIMO_EXT_IRQ_FLAGS_REG), rx_buffer,
-                    tx_buffer, 5);
-                ext_flags = ((uint32_t)rx_buffer[0] << 24) |
-                            ((uint32_t)rx_buffer[1] << 16) |
-                            ((uint32_t)rx_buffer[2] << 8) |
-                            ((uint32_t)rx_buffer[3]);
-                if (ext_flags & TIMO_EXTIRQ_SPI_RDM_DISC_FLAG) {
-                    while (!timo_spi_irq_is_pending()) {
-                        ;
-                    }
-
                     return;
                 }
             }

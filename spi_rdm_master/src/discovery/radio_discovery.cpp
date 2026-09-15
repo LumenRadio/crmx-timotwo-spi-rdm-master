@@ -27,7 +27,7 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
     tx_buffer[11] = upper;
     timo_spi_transfer(TIMO_RADIO_DISCOVERY, rx_buffer, tx_buffer, 13);
 
-    timo_spi_wait_for_radio_discovery_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG);
 
     timo_spi_transfer(TIMO_RADIO_DISCOVERY_RESULT, rx_buffer, tx_buffer, 8);
 
@@ -67,7 +67,7 @@ bool radio_discovery_mute(uint64_t uid) {
     tx_buffer[6] = 1;
     timo_spi_transfer(TIMO_RADIO_MUTE, rx_buffer, tx_buffer, 8);
 
-    timo_spi_wait_for_radio_mute_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG);
 
     timo_spi_transfer(TIMO_RADIO_MUTE_RESPONSE, rx_buffer, tx_buffer, 2);
 
@@ -92,7 +92,7 @@ void radio_discovery_unmute_all(void) {
     tx_buffer[6] = 0;
     timo_spi_transfer(TIMO_RADIO_MUTE, rx_buffer, tx_buffer, 8);
 
-    timo_spi_wait_for_radio_mute_response();
+    timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG);
 
     timo_spi_transfer(TIMO_RADIO_MUTE_RESPONSE, rx_buffer, tx_buffer, 2);
 }
