@@ -97,7 +97,8 @@ void radio_discovery_unmute_all(void) {
     timo_spi_transfer(TIMO_RADIO_MUTE_RESPONSE, rx_buffer, tx_buffer, 2);
 }
 
-uint16_t radio_discovery_discover_sub_tree(uint64_t lower, uint64_t upper) {
+uint16_t radio_discovery_discover_sub_tree(UidList *radios, uint64_t lower,
+                                           uint64_t upper) {
     DiscoveryResponseType dub_resp;
     uint16_t n_found = 0;
     uint64_t uid;
@@ -124,8 +125,9 @@ uint16_t radio_discovery_discover_sub_tree(uint64_t lower, uint64_t upper) {
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of
              * devices in each half of the tree */
-            return n_found + radio_discovery_discover_sub_tree(lower, mid) +
-                   radio_discovery_discover_sub_tree(mid + 1, upper);
+            return n_found +
+                   radio_discovery_discover_sub_tree(radios, lower, mid) +
+                   radio_discovery_discover_sub_tree(radios, mid + 1, upper);
         }
 
         /* if we got a single response we will try to mute it to verify it's a
@@ -134,8 +136,8 @@ uint16_t radio_discovery_discover_sub_tree(uint64_t lower, uint64_t upper) {
             if (radio_discovery_mute(uid)) {
                 /* if we could mute it and we do not already have it in the list
                  * - add it. */
-                if (!uid_list_radio_is_in_list(uid)) {
-                    uid_list_add_radio_to_list(uid);
+                if (!uid_list_contains(radios, uid)) {
+                    uid_list_add(radios, uid);
                     n_found++;
                 }
             }

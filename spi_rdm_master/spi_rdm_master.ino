@@ -8,9 +8,9 @@
 
 #include "src/discovery/discovery.h"
 #include "src/rdm/rdm_commands.h"
+#include "src/rdm/rdm_protocol.h"
 #include "src/timo_spi/timo_spi.h"
 #include "src/util/debug_print.h"
-#include "src/util/uid_list.h"
 #include <SPI.h>
 
 /* This variable sets if we are going to run in G4S mode or CRMX mode, uncomment
@@ -23,27 +23,7 @@ uint8_t my_uid[6] = {0x4c, 0x55, 0x00, 0x00, 0x00, 0x12};
 
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
-/* Define where the TimoTwo module is connected */
-timo_t timo = {.csn_pin = 5, .irq_pin = 3};
-
-/* SPI communication buffers, make sure these are aligned to 32 bit words */
-static uint32_t tx_buffer32[300 / 4];
-static uint32_t rx_buffer32[300 / 4];
-/* point the working byte pointers to the aligned buffers */
-uint8_t *tx_buffer = (uint8_t *)tx_buffer32;
-uint8_t *rx_buffer = (uint8_t *)rx_buffer32;
-
 static bool has_set_up = false;
-
-/* Set up the radio and RDM device lists */
-uint64_t radios[UID_LIST_N_RADIOS] = {0, 0};
-uint8_t n_radios = 0;
-uint64_t rdm_devices[UID_LIST_N_DEVICES] = {0, 0};
-uint8_t n_devices = 0;
-
-/* This variable holds the RDM transaction number, shall be incremented for each
- * new message */
-uint8_t rdm_tn = 0;
 
 /**
  * This is the Arduino setup function, it's called when the Arduino starts up
@@ -54,17 +34,10 @@ void setup() {
     /* Initiate serial port to 115200 bps */
     Serial.begin(115200);
 
-    /* Initiate SPI */
-    SPI.begin();
+    /* Initiate the TimoTwo module: pins, IRQ handler and SPI */
+    timo_spi_init(/*csn_pin=*/5, /*irq_pin=*/3);
 
-    /* Setup IRQ and CS pins */
-    pinMode(timo.irq_pin, INPUT);
-    pinMode(timo.csn_pin, OUTPUT);
-    digitalWrite(timo.csn_pin, HIGH);
-    attachInterrupt(digitalPinToInterrupt(timo.irq_pin),
-                    timo_spi_irq_pin_handler, FALLING);
-
-    SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+    rdm_protocol_register_uid(my_uid);
 
     delay(1000);
 
@@ -195,7 +168,7 @@ void setup() {
                                   rx_buffer, tx_buffer, 5);
     debug_print_response(irq_flags, rx_buffer, 4);
 
-    discovery_all(false);
+    discovery_all(rf_protocol, false);
 }
 
 /**
@@ -209,16 +182,16 @@ void loop() {
     Serial.println();
 
     /* Print a list of the discovered devices */
-    for (i = 1; i < (n_devices + 1); i++) {
+    for (i = 1; i < (discovery_device_count() + 1); i++) {
         Serial.print(i);
         Serial.print(") ");
-        debug_print_uid(rdm_devices[i - 1]);
+        debug_print_uid(discovery_device_uid(i - 1));
         Serial.print(" ");
         rdm_commands_print_manufacturer_label(0x00FFFFFFFFFFFF,
-                                              rdm_devices[i - 1]);
+                                              discovery_device_uid(i - 1));
         Serial.print(" ");
-        rdm_commands_print_device_model_description(0x00FFFFFFFFFFFF,
-                                                    rdm_devices[i - 1]);
+        rdm_commands_print_device_model_description(
+            0x00FFFFFFFFFFFF, discovery_device_uid(i - 1));
         Serial.println();
     }
 
@@ -232,28 +205,28 @@ void loop() {
     /* Wait for input from the user */
     selection = Serial.parseInt();
 
-    if (selection == (n_devices + 1)) {
+    if (selection == (discovery_device_count() + 1)) {
         /* selection was to Find all devices (full discovery) */
-        discovery_all(false);
-    } else if (selection == (n_devices + 2)) {
+        discovery_all(rf_protocol, false);
+    } else if (selection == (discovery_device_count() + 2)) {
         /* selection was to Find new devices (incremental discovery) */
-        discovery_all(true);
-    } else if ((selection > 0) && (selection <= n_devices)) {
+        discovery_all(rf_protocol, true);
+    } else if ((selection > 0) && (selection <= discovery_device_count())) {
         /* a device was selected from the list - we will rdm_commands_identify
          * it for 5 seconds */
         Serial.print("Identifying ");
-        debug_print_uid(rdm_devices[selection - 1]);
+        debug_print_uid(discovery_device_uid(selection - 1));
         Serial.println("...");
-        rdm_commands_identify(0x00FFFFFFFFFFFF, rdm_devices[selection - 1],
-                              true);
+        rdm_commands_identify(0x00FFFFFFFFFFFF,
+                              discovery_device_uid(selection - 1), true);
         for (i = 0; i < 5; i++) {
             Serial.print(5 - i);
             Serial.print("... ");
             Serial.flush();
             delay(1000);
         }
-        rdm_commands_identify(0x00FFFFFFFFFFFF, rdm_devices[selection - 1],
-                              false);
+        rdm_commands_identify(0x00FFFFFFFFFFFF,
+                              discovery_device_uid(selection - 1), false);
         Serial.println("done");
     }
 }

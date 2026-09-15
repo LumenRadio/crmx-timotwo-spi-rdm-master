@@ -134,7 +134,8 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     return DiscoveryNone;
 }
 
-uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
+uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
+                                         uint64_t rx, uint64_t lower,
                                          uint64_t upper) {
     DiscoveryResponseType dub_resp;
     uint16_t n_found = 0;
@@ -153,8 +154,8 @@ uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
             if (rdm_discovery_mute_device(rx, uid)) {
                 /* add the device to the list if it was not already in the list
                  */
-                if (!uid_list_rdm_device_is_in_list(uid)) {
-                    uid_list_add_rdm_device_to_list(uid);
+                if (!uid_list_contains(rdm_devices, uid)) {
+                    uid_list_add(rdm_devices, uid);
                     return 1;
                 }
             }
@@ -181,19 +182,20 @@ uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of
              * devices in each half of the tree */
-            return n_found + radio_discovery_discover_sub_tree(lower, mid) +
-                   radio_discovery_discover_sub_tree(mid + 1, upper);
+            return n_found +
+                   radio_discovery_discover_sub_tree(radios, lower, mid) +
+                   radio_discovery_discover_sub_tree(radios, mid + 1, upper);
         }
 
         /* if we got a single response we will try to mute it to verify it's a
          * true response */
         if (dub_resp == DiscoveryUid) {
             if (rdm_discovery_mute_device(rx, uid)) {
-                if (!uid_list_rdm_device_is_in_list(uid)) {
+                if (!uid_list_contains(rdm_devices, uid)) {
                     /* if device could be muted and did not exist in list
                      * before, then we found a new device
                      */
-                    uid_list_add_rdm_device_to_list(uid);
+                    uid_list_add(rdm_devices, uid);
                     n_found++;
                 } else {
                     /* if device was already in the list, but could be muted -
@@ -216,8 +218,11 @@ uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of
              * devices in each half of the tree */
-            return n_found + rdm_discovery_discover_sub_tree(rx, lower, mid) +
-                   rdm_discovery_discover_sub_tree(rx, mid + 1, upper);
+            return n_found +
+                   rdm_discovery_discover_sub_tree(radios, rdm_devices, rx,
+                                                   lower, mid) +
+                   rdm_discovery_discover_sub_tree(radios, rdm_devices, rx,
+                                                   mid + 1, upper);
         }
 
     } while (
@@ -227,7 +232,8 @@ uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
     return n_found;
 }
 
-int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(uint64_t rx) {
+int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(UidList *rdm_devices,
+                                                      uint64_t rx) {
     RdmRequest req;
     RdmResponse resp;
     uint8_t n_dev = 0;
@@ -280,7 +286,7 @@ int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(uint64_t rx) {
                 uid |= resp.parameterData[i * 8 + 5];
                 /* next two bytes are mute flasg, ignore these */
 
-                uid_list_add_rdm_device_to_list(uid);
+                uid_list_add(rdm_devices, uid);
                 n_dev++;
             }
         }

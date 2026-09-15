@@ -8,10 +8,13 @@
 #define RDM_PROTOCOL_SWAP16(x)                                                 \
     ((uint16_t)(((uint16_t)x >> 8) | ((uint16_t)x << 8)))
 
-/* The UID to use for this controller, and the RDM transaction number, shall
- * be incremented for each new message. Both defined in spi_rdm_master.ino */
-extern uint8_t my_uid[6];
-extern uint8_t rdm_tn;
+/**
+ * Registers the UID this controller uses as the source of every RDM packet
+ * it builds. Must be called once before rdm_protocol_fill_packet.
+ *
+ * @param uid   The 6-byte UID to use.
+ */
+void rdm_protocol_register_uid(const uint8_t uid[6]);
 
 /**
  * Fills an RDM packet with all the standard values.

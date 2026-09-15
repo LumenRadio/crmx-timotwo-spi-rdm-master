@@ -185,13 +185,19 @@ typedef struct {
          .name = "OEM_INFO"},                                                  \
     }
 
-/* Shared TimoTwo instance and SPI scratch buffers, defined in
- * spi_rdm_master.ino */
-extern timo_t timo;
+/* SPI buffers */
 extern uint8_t *tx_buffer;
 extern uint8_t *rx_buffer;
 
-void timo_spi_irq_pin_handler();
+/**
+ * Initializes the TimoTwo pin/IRQ state, starts SPI, and attaches the IRQ
+ * handler. Must be called once before any other timo_spi function.
+ *
+ * @param csn_pin   The pin connected to the TimoTwo's SPI chip-select.
+ * @param irq_pin   The pin connected to the TimoTwo's IRQ output.
+ */
+void timo_spi_init(int csn_pin, int irq_pin);
+
 bool timo_spi_irq_is_pending();
 
 /**

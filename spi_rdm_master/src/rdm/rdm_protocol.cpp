@@ -1,5 +1,10 @@
 #include "rdm_protocol.h"
 
+static uint8_t my_uid[6];
+static uint8_t rdm_tn = 0;
+
+void rdm_protocol_register_uid(const uint8_t uid[6]) { memcpy(my_uid, uid, 6); }
+
 void rdm_protocol_fill_packet(RdmRequest *r, uint64_t dest) {
     r->startCode = SC_RDM;
     r->subStartCode = SC_SUB_MESSAGE;

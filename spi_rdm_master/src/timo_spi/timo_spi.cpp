@@ -2,7 +2,29 @@
 
 #include <SPI.h>
 
-void timo_spi_irq_pin_handler() { timo.irq_pending = 1; }
+static timo_t timo;
+
+static uint32_t tx_buffer32[300 / 4];
+static uint32_t rx_buffer32[300 / 4];
+uint8_t *tx_buffer = (uint8_t *)tx_buffer32;
+uint8_t *rx_buffer = (uint8_t *)rx_buffer32;
+
+static void timo_spi_irq_pin_handler() { timo.irq_pending = 1; }
+
+void timo_spi_init(int csn_pin, int irq_pin) {
+    timo.csn_pin = csn_pin;
+    timo.irq_pin = irq_pin;
+    timo.irq_pending = false;
+
+    pinMode(timo.irq_pin, INPUT);
+    pinMode(timo.csn_pin, OUTPUT);
+    digitalWrite(timo.csn_pin, HIGH);
+    attachInterrupt(digitalPinToInterrupt(timo.irq_pin),
+                    timo_spi_irq_pin_handler, FALLING);
+
+    SPI.begin();
+    SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+}
 
 bool timo_spi_irq_is_pending() {
     noInterrupts();

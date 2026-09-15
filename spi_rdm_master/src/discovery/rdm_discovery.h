@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#include "../util/uid_list.h"
 #include "discovery_types.h"
 
 /**
@@ -43,11 +44,15 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
  *
  * Return value:  The number of radios found in this part of the tree.
  *
- * @param rx      The receiver to perform the discover via.
- * @param lower   The lower end of the search span
- * @param upper   The upper end of the search span
+ * @param radios       The list of known radios
+ * @param rdm_devices  The list of known RDM devices, updated as new ones
+ * are found.
+ * @param rx           The receiver to perform the discover via.
+ * @param lower        The lower end of the search span
+ * @param upper        The upper end of the search span
  */
-uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
+uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
+                                         uint64_t rx, uint64_t lower,
                                          uint64_t upper);
 
 /**
@@ -57,8 +62,11 @@ uint16_t rdm_discovery_discover_sub_tree(uint64_t rx, uint64_t lower,
  * failed. Some older W-DMX receivers does not return a list at all when the
  * list is empty.
  *
- * @param rx      The receiver to fetch RDM devie list from.
+ * @param rdm_devices  The list of known RDM devices, updated as new ones
+ * are found.
+ * @param rx           The receiver to fetch RDM devie list from.
  */
-int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(uint64_t rx);
+int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(UidList *rdm_devices,
+                                                      uint64_t rx);
 
 #endif

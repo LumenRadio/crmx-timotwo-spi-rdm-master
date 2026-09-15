@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#include "../util/uid_list.h"
 #include "discovery_types.h"
 
 /**
@@ -42,9 +43,11 @@ void radio_discovery_unmute_all(void);
  *
  * Return value:  The number of radios found in this part of the tree.
  *
+ * @param radios  The list of known radios, updated as new ones are found.
  * @param lower   The lower end of the search span
  * @param upper   The upper end of the search span
  */
-uint16_t radio_discovery_discover_sub_tree(uint64_t lower, uint64_t upper);
+uint16_t radio_discovery_discover_sub_tree(UidList *radios, uint64_t lower,
+                                           uint64_t upper);
 
 #endif
