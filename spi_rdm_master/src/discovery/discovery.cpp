@@ -123,7 +123,7 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
             serial_print_uid(radios.items[i]);
             serial_println("...");
             new_found += rdm_discovery_discover_sub_tree(
-                &radios, &rdm_devices, radios.items[i], 0, 0x0000FFFFFFFFFFFF);
+                &rdm_devices, radios.items[i], 0, 0x0000FFFFFFFFFFFF);
             serial_print("Found ");
             serial_print(new_found);
             serial_println(" new...");

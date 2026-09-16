@@ -44,16 +44,14 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
  *
  * Return value:  The number of radios found in this part of the tree.
  *
- * @param radios       The list of known radios
  * @param rdm_devices  The list of known RDM devices, updated as new ones
  * are found.
  * @param rx           The receiver to perform the discover via.
  * @param lower        The lower end of the search span
  * @param upper        The upper end of the search span
  */
-uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
-                                         uint64_t rx, uint64_t lower,
-                                         uint64_t upper);
+uint16_t rdm_discovery_discover_sub_tree(UidList *rdm_devices, uint64_t rx,
+                                         uint64_t lower, uint64_t upper);
 
 /**
  * Fetches a list of downstream RDM devices from a W-DMX G4S receiver.
