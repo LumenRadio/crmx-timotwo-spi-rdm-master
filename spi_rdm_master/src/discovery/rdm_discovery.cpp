@@ -5,7 +5,6 @@
 #include "../timo_spi/timo_spi.h"
 #include "../util/uid.h"
 #include "../util/uid_list.h"
-#include "radio_discovery.h"
 
 void rdm_discovery_unmute_all() {
     RdmRequest req;
@@ -110,9 +109,8 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     return DiscoveryNone;
 }
 
-uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
-                                         uint64_t rx, uint64_t lower,
-                                         uint64_t upper) {
+uint16_t rdm_discovery_discover_sub_tree(UidList *rdm_devices, uint64_t rx,
+                                         uint64_t lower, uint64_t upper) {
     DiscoveryResponseType dub_resp;
     uint16_t n_found = 0;
     uint64_t uid;
@@ -159,8 +157,10 @@ uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
              * sum of: the number of devices we already found + the number of
              * devices in each half of the tree */
             return n_found +
-                   radio_discovery_discover_sub_tree(radios, lower, mid) +
-                   radio_discovery_discover_sub_tree(radios, mid + 1, upper);
+                   rdm_discovery_discover_sub_tree(rdm_devices, rx, lower,
+                                                   mid) +
+                   rdm_discovery_discover_sub_tree(rdm_devices, rx, mid + 1,
+                                                   upper);
         }
 
         /* if we got a single response we will try to mute it to verify it's a
@@ -195,10 +195,10 @@ uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
              * sum of: the number of devices we already found + the number of
              * devices in each half of the tree */
             return n_found +
-                   rdm_discovery_discover_sub_tree(radios, rdm_devices, rx,
-                                                   lower, mid) +
-                   rdm_discovery_discover_sub_tree(radios, rdm_devices, rx,
-                                                   mid + 1, upper);
+                   rdm_discovery_discover_sub_tree(rdm_devices, rx, lower,
+                                                   mid) +
+                   rdm_discovery_discover_sub_tree(rdm_devices, rx, mid + 1,
+                                                   upper);
         }
 
     } while (
