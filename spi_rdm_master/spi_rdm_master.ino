@@ -1,11 +1,11 @@
 /**
  * This example provides a very simple RDM controller using the TimoTwo module's
- * SPI RDM TX function. It can be used in CRMX mode or W-DMX G4S mode, and is
- * controlled be a variable set below. This example does not implements any
- * error checking of missed responses, etc. This must be added in a real-world
- * implementation.
+ * SPI RDM TX function. It can be used in CRMX mode or W-DMX G4S mode,
+ * configured via config.h. This example does not implement any error checking
+ * of missed responses, etc. This must be added in a real-world implementation.
  */
 
+#include "config.h"
 #include "src/discovery/discovery.h"
 #include "src/rdm/rdm_commands.h"
 #include "src/rdm/rdm_protocol.h"
@@ -15,10 +15,8 @@
 #include "src/timo_spi/timo_spi_reg.h"
 #include <SPI.h>
 
-/* This variable sets if we are going to run in G4S mode or CRMX mode, uncomment
- * the one you want */
-uint8_t rf_protocol = TIMO_RF_PROTO_G4S;
-// uint8_t rf_protocol = TIMO_RF_PROTO_CRMX;
+/* Which RF protocol to run in, set in config.h */
+uint8_t rf_protocol = RF_PROTOCOL;
 
 /* The UID to use for this controller */
 uint8_t my_uid[6] = {0x4c, 0x55, 0x00, 0x00, 0x00, 0x12};
@@ -88,9 +86,21 @@ static void disable_ble() {
     }
 }
 
+static const char *rf_protocol_name(uint8_t protocol) {
+    switch (protocol) {
+    case TIMO_RF_PROTO_CRMX:
+        return "CRMX";
+    case TIMO_RF_PROTO_G3:
+        return "G3";
+    case TIMO_RF_PROTO_G4S:
+        return "G4S";
+    default:
+        return "unknown";
+    }
+}
+
 /**
- * Makes sure the module is configured for the rf_protocol set at the top of
- * this file.
+ * Makes sure the module is configured for the rf_protocol set in config.h.
  */
 static void set_desired_rf_protocol() {
     serial_println("RF Protocol:");
@@ -98,7 +108,8 @@ static void set_desired_rf_protocol() {
     int16_t irq_flags = timo_spi_reg_read_rf_protocol(&current_rf_protocol);
     serial_print_response(irq_flags, &current_rf_protocol, 1);
     while (current_rf_protocol != rf_protocol) {
-        serial_println("Configured for wrong protocol - changing to G4S");
+        serial_print("Configured for wrong protocol - changing to ");
+        serial_println(rf_protocol_name(rf_protocol));
         timo_spi_reg_write_rf_protocol(rf_protocol);
         delay(3000);
         irq_flags = timo_spi_reg_read_rf_protocol(&current_rf_protocol);

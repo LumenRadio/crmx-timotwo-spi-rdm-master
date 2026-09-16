@@ -9,6 +9,11 @@ Connect your Arduino to your TimoTwo's SPI interface, all five signals are requi
 The example will automatically start to discover any connected receivers and downstream RDM devices. It will show you the manufacturer label and device model description of the discovered devices.
 It will let you trigger a new discover or to identify any of the discovered devices.
 
+## Configuration
+Before building, check `spi_rdm_master/config.h` for settings you may want to change — currently just
+`RF_PROTOCOL`, which selects CRMX or G4S mode (defaults to CRMX). Edit the value directly, or override
+it with a build flag (e.g. `-DRF_PROTOCOL=TIMO_RF_PROTO_G4S`) without touching the file.
+
 ## Building
 This project includes a `Makefile` that wraps [`arduino-cli`](https://arduino.github.io/arduino-cli/),
 which must be installed and available on your `PATH`.
