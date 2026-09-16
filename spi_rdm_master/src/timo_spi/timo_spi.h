@@ -216,6 +216,23 @@ int16_t timo_spi_transfer(uint8_t command, uint8_t *dst, uint8_t *src,
                           uint32_t len);
 
 /**
+ * Same as timo_spi_transfer, but retries the transfer if it times out or the
+ * device reports itself busy.
+ *
+ * Return value:   Same as timo_spi_transfer - the result of the last attempt.
+ *
+ * @param command       The TimoTwo SPI command.
+ * @param *dst          Pointer to the buffer where to store the returned data
+ * @param *src          Pointer to the buffer containing data to transfer
+ * @param len           Length in bytes. IRQ flags is included.
+ * @param max_retries   How many additional attempts to make after the first
+ * one fails.
+ */
+int16_t timo_spi_transfer_with_retries(uint8_t command, uint8_t *dst,
+                                       uint8_t *src, uint32_t len,
+                                       uint8_t max_retries);
+
+/**
  * This is a specialized version of the SPI transfer function for RDM responses.
  * It checks the length field of the RDM response to know how much data to
  * transfer.

@@ -11,6 +11,7 @@
 #include "src/rdm/rdm_protocol.h"
 #include "src/serial/serial.h"
 #include "src/timo_spi/timo_spi.h"
+#include "src/timo_spi/timo_spi_reg.h"
 #include <SPI.h>
 
 /* This variable sets if we are going to run in G4S mode or CRMX mode, uncomment
@@ -50,33 +51,27 @@ void setup() {
     }
 
     serial_println("Version:");
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_VERSION_REG),
-                                  rx_buffer, tx_buffer, 9);
+    irq_flags = timo_spi_reg_read_version(rx_buffer, 8);
     serial_print_response(irq_flags, rx_buffer, 8);
 
     /* Making sure module is in TX mode */
     serial_println("Config:");
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_CONFIG_REG),
-                                  rx_buffer, tx_buffer, 2);
-    serial_print_response(irq_flags, rx_buffer, 1);
-    while ((rx_buffer[0] & TIMO_CONFIG_RADIO_TX_RX_MODE) == 0) {
+    uint8_t config;
+    irq_flags = timo_spi_reg_read_config(&config);
+    serial_print_response(irq_flags, &config, 1);
+    while ((config & TIMO_CONFIG_RADIO_TX_RX_MODE) == 0) {
         serial_println("In RX mode - changing mode");
         /* in RX mode - change to TX */
-        tx_buffer[0] = rx_buffer[0] | TIMO_CONFIG_RADIO_TX_RX_MODE;
-        timo_spi_transfer(TIMO_WRITE_REG_COMMAND(TIMO_CONFIG_REG), rx_buffer,
-                          tx_buffer, 2);
+        timo_spi_reg_write_config(config | TIMO_CONFIG_RADIO_TX_RX_MODE);
         delay(3000);
-        irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_CONFIG_REG),
-                                      rx_buffer, tx_buffer, 2);
-        serial_print_response(irq_flags, rx_buffer, 1);
+        irq_flags = timo_spi_reg_read_config(&config);
+        serial_print_response(irq_flags, &config, 1);
     }
 
     /* Making sure we have the RDM SPI TX option installed, assume it being
      * among the first 5 options, so only read 10 bytes */
     serial_println("Options:");
-    irq_flags =
-        timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_INSTALLED_OPTIONS_REG),
-                          rx_buffer, tx_buffer, 10);
+    irq_flags = timo_spi_reg_read_installed_options(rx_buffer, 9);
     serial_print_response(irq_flags, rx_buffer, 1);
     serial_print("Module has ");
     serial_print(rx_buffer[0]);
@@ -103,64 +98,49 @@ void setup() {
      * does not deal with BLE
      */
     serial_println("BLE:");
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_BLE_STATUS_REG),
-                                  rx_buffer, tx_buffer, 2);
-    serial_print_response(irq_flags, rx_buffer, 1);
-    while (rx_buffer[0] & TIMO_BLE_ENABLED) {
+    uint8_t ble_status;
+    irq_flags = timo_spi_reg_read_ble_status(&ble_status);
+    serial_print_response(irq_flags, &ble_status, 1);
+    while (ble_status & TIMO_BLE_ENABLED) {
         serial_println("BLE is on - turning off");
-        tx_buffer[0] = 0x00;
-        timo_spi_transfer(TIMO_WRITE_REG_COMMAND(TIMO_BLE_STATUS_REG),
-                          rx_buffer, tx_buffer, 2);
+        timo_spi_reg_write_ble_status(0x00);
         delay(3000);
-        irq_flags =
-            timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_BLE_STATUS_REG),
-                              rx_buffer, tx_buffer, 2);
-        serial_print_response(irq_flags, rx_buffer, 1);
+        irq_flags = timo_spi_reg_read_ble_status(&ble_status);
+        serial_print_response(irq_flags, &ble_status, 1);
     }
 
     /* Making sure the module is configured for the correct protocol */
     serial_println("RF Protocol:");
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_RF_PROTOCOL_REG),
-                                  rx_buffer, tx_buffer, 2);
-    serial_print_response(irq_flags, rx_buffer, 1);
-    while (rx_buffer[0] != rf_protocol) {
+    uint8_t current_rf_protocol;
+    irq_flags = timo_spi_reg_read_rf_protocol(&current_rf_protocol);
+    serial_print_response(irq_flags, &current_rf_protocol, 1);
+    while (current_rf_protocol != rf_protocol) {
         serial_println("Configured for wrong protocol - changing to G4S");
-        tx_buffer[0] = rf_protocol;
-        timo_spi_transfer(TIMO_WRITE_REG_COMMAND(TIMO_RF_PROTOCOL_REG),
-                          rx_buffer, tx_buffer, 2);
+        timo_spi_reg_write_rf_protocol(rf_protocol);
         delay(3000);
-        irq_flags =
-            timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_RF_PROTOCOL_REG),
-                              rx_buffer, tx_buffer, 2);
-        serial_print_response(irq_flags, rx_buffer, 1);
+        irq_flags = timo_spi_reg_read_rf_protocol(&current_rf_protocol);
+        serial_print_response(irq_flags, &current_rf_protocol, 1);
     }
 
     serial_println("Status:");
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_STATUS_REG),
-                                  rx_buffer, tx_buffer, 2);
-    serial_print_response(irq_flags, rx_buffer, 1);
+    uint8_t status;
+    irq_flags = timo_spi_reg_read_status(&status);
+    serial_print_response(irq_flags, &status, 1);
 
     /* Enabling the extended IRQs */
     serial_println("IRQ mask:");
-    tx_buffer[0] = TIMO_IRQ_EXTENDED_FLAG;
-    irq_flags = timo_spi_transfer(TIMO_WRITE_REG_COMMAND(TIMO_IRQ_MASK_REG),
-                                  rx_buffer, tx_buffer, 2);
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_IRQ_MASK_REG),
-                                  rx_buffer, tx_buffer, 2);
-    serial_print_response(irq_flags, rx_buffer, 1);
+    timo_spi_reg_write_irq_mask(TIMO_IRQ_EXTENDED_FLAG);
+    uint8_t irq_mask;
+    irq_flags = timo_spi_reg_read_irq_mask(&irq_mask);
+    serial_print_response(irq_flags, &irq_mask, 1);
 
     /* Enabling interrupts for Discovery (Radio and RDM), Mute and RDM */
     serial_println("Extended IRQ mask:");
-    tx_buffer[0] = 0;
-    tx_buffer[1] = 0;
-    tx_buffer[2] = 0;
-    tx_buffer[3] = TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG |
-                   TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG |
-                   TIMO_EXTIRQ_SPI_RDM_DISC_FLAG | TIMO_EXTIRQ_SPI_RDM_FLAG;
-    irq_flags = timo_spi_transfer(TIMO_WRITE_REG_COMMAND(TIMO_EXT_IRQ_MASK_REG),
-                                  rx_buffer, tx_buffer, 5);
-    irq_flags = timo_spi_transfer(TIMO_READ_REG_COMMAND(TIMO_EXT_IRQ_MASK_REG),
-                                  rx_buffer, tx_buffer, 5);
+    uint32_t ext_irq_mask =
+        TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG | TIMO_EXTIRQ_SPI_RADIO_MUTE_FLAG |
+        TIMO_EXTIRQ_SPI_RDM_DISC_FLAG | TIMO_EXTIRQ_SPI_RDM_FLAG;
+    timo_spi_reg_write_ext_irq_mask(ext_irq_mask);
+    irq_flags = timo_spi_reg_read_ext_irq_mask(&ext_irq_mask);
     serial_print_response(irq_flags, rx_buffer, 4);
 
     discovery_all(rf_protocol, false);

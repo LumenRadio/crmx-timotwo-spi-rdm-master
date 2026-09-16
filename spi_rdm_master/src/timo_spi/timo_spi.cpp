@@ -1,6 +1,10 @@
 #include "timo_spi.h"
 
+#include "../serial/serial.h"
 #include <SPI.h>
+
+#define TIMO_SPI_CMD_ACKNOWLEDGE_TIMEOUT_MS 1000
+#define TIMO_SPI_CMD_COMPLETE_TIMEOUT_MS 100
 
 static timo_t timo;
 
@@ -60,7 +64,7 @@ int16_t timo_spi_transfer(uint8_t command, uint8_t *dst, uint8_t *src,
 
     /* wait for IRQ or timeout */
     while (!timo_spi_irq_is_pending()) {
-        if (millis() - start_time > 1000) {
+        if (millis() - start_time > TIMO_SPI_CMD_ACKNOWLEDGE_TIMEOUT_MS) {
             return -1;
         }
     }
@@ -83,13 +87,40 @@ int16_t timo_spi_transfer(uint8_t command, uint8_t *dst, uint8_t *src,
     /* End transfer */
     digitalWrite(timo.csn_pin, HIGH);
 
-    /* wair for IRQ or timeout */
+    /* wait for IRQ or timeout */
     while (!digitalRead(timo.irq_pin)) {
-        if (millis() - start_time > 50) {
+        if (millis() - start_time > TIMO_SPI_CMD_COMPLETE_TIMEOUT_MS) {
             break;
         }
     }
     return irq_flags;
+}
+
+int16_t timo_spi_transfer_with_retries(uint8_t command, uint8_t *dst,
+                                       uint8_t *src, uint32_t len,
+                                       uint8_t max_retries) {
+    int16_t irq_flags;
+    uint8_t attempt = 0;
+
+    while (1) {
+        irq_flags = timo_spi_transfer(command, dst, src, len);
+        if ((irq_flags >= 0) && !(irq_flags & TIMO_SPI_DEVICE_BUSY_IRQ_MASK)) {
+            return irq_flags;
+        }
+        if (attempt >= max_retries) {
+            return irq_flags;
+        }
+        attempt++;
+        serial_print("SPI transfer (command 0x");
+        serial_print(command, HEX);
+        serial_print(") ");
+        serial_print(irq_flags < 0 ? "timed out" : "device busy");
+        serial_print(", retrying (");
+        serial_print(attempt);
+        serial_print("/");
+        serial_print(max_retries);
+        serial_println(")...");
+    }
 }
 
 int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
@@ -118,7 +149,7 @@ int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
 
     /* otherwise wait for IRQ or timeout */
     while (!timo_spi_irq_is_pending()) {
-        if (millis() - start_time > 1000) {
+        if (millis() - start_time > TIMO_SPI_CMD_ACKNOWLEDGE_TIMEOUT_MS) {
             return -1;
         }
     }
@@ -158,7 +189,7 @@ int16_t timo_spi_transfer_rdm_response(uint8_t command, uint8_t *dst,
 
     /* wait for IRQ or timeout */
     while (!digitalRead(timo.irq_pin)) {
-        if (millis() - start_time > 50) {
+        if (millis() - start_time > TIMO_SPI_CMD_COMPLETE_TIMEOUT_MS) {
             break;
         }
     }
