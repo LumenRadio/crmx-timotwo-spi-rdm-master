@@ -1,17 +1,17 @@
 #include "radio_discovery.h"
 
+#include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
-#include "../util/debug_print.h"
 #include "../util/uid_list.h"
 
 DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
                                           uint64_t *uid) {
-    Serial.print("Radio DUB (");
-    debug_print_uid(lower);
+    serial_print("Radio DUB (");
+    serial_print_uid(lower);
 
-    Serial.print(":");
-    debug_print_uid(upper);
-    Serial.println(")...");
+    serial_print(":");
+    serial_print_uid(upper);
+    serial_println(")...");
 
     tx_buffer[0] = lower >> 40;
     tx_buffer[1] = lower >> 32;
@@ -32,20 +32,20 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
     timo_spi_transfer(TIMO_RADIO_DISCOVERY_RESULT, rx_buffer, tx_buffer, 8);
 
     if (rx_buffer[0] == 1) {
-        Serial.println("No response.");
+        serial_println("No response.");
         return DiscoveryNone;
     } else if (rx_buffer[0] == 2) {
-        Serial.println("Collission.");
+        serial_println("Collission.");
         return DiscoveryCollission;
     } else if (rx_buffer[0] == 3) {
         uint64_t found_uid = 0;
-        Serial.print("Found dev: ");
+        serial_print("Found dev: ");
         for (int i = 0; i < 6; i++) {
             found_uid = found_uid << 8;
             found_uid |= rx_buffer[1 + i];
         }
-        debug_print_uid(found_uid);
-        Serial.println();
+        serial_print_uid(found_uid);
+        serial_println();
         *uid = found_uid;
         return DiscoveryUid;
     }
@@ -54,9 +54,9 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
 }
 
 bool radio_discovery_mute(uint64_t uid) {
-    Serial.print("Trying to mute ");
-    debug_print_uid(uid);
-    Serial.println("...");
+    serial_print("Trying to mute ");
+    serial_print_uid(uid);
+    serial_println("...");
 
     tx_buffer[0] = uid >> 40;
     tx_buffer[1] = uid >> 32;
@@ -72,16 +72,16 @@ bool radio_discovery_mute(uint64_t uid) {
     timo_spi_transfer(TIMO_RADIO_MUTE_RESPONSE, rx_buffer, tx_buffer, 2);
 
     if (rx_buffer[0]) {
-        Serial.println("Muted.");
+        serial_println("Muted.");
         return true;
     } else {
-        Serial.println("Failed to mute.");
+        serial_println("Failed to mute.");
         return false;
     }
 }
 
 void radio_discovery_unmute_all(void) {
-    Serial.println("Unmuting all radios...");
+    serial_println("Unmuting all radios...");
 
     tx_buffer[0] = 0xFF;
     tx_buffer[1] = 0xFF;

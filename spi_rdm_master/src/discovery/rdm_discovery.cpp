@@ -1,8 +1,8 @@
 #include "rdm_discovery.h"
 
 #include "../rdm/rdm_protocol.h"
+#include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
-#include "../util/debug_print.h"
 #include "../util/uid_list.h"
 #include "radio_discovery.h"
 
@@ -81,12 +81,12 @@ bool rdm_discovery_mute_device(uint64_t rx, uint64_t uid) {
 
 DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
                                         uint64_t upper, uint64_t *uid) {
-    Serial.print("RDM DUB (");
-    debug_print_uid(lower);
+    serial_print("RDM DUB (");
+    serial_print_uid(lower);
 
-    Serial.print(":");
-    debug_print_uid(upper);
-    Serial.println(")...");
+    serial_print(":");
+    serial_print_uid(upper);
+    serial_println(")...");
 
     tx_buffer[0] = rx >> 40;
     tx_buffer[1] = rx >> 32;
@@ -113,20 +113,20 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     timo_spi_transfer(TIMO_RDM_DISCOVERY_RESULT, rx_buffer, tx_buffer, 8);
 
     if (rx_buffer[0] == 1) {
-        Serial.println("No response.");
+        serial_println("No response.");
         return DiscoveryNone;
     } else if (rx_buffer[0] == 2) {
-        Serial.println("Collission.");
+        serial_println("Collission.");
         return DiscoveryCollission;
     } else if (rx_buffer[0] == 3) {
         uint64_t found_uid = 0;
-        Serial.print("Found dev: ");
+        serial_print("Found dev: ");
         for (int i = 0; i < 6; i++) {
             found_uid = found_uid << 8;
             found_uid |= rx_buffer[1 + i];
         }
-        debug_print_uid(found_uid);
-        Serial.println();
+        serial_print_uid(found_uid);
+        serial_println();
         *uid = found_uid;
         return DiscoveryUid;
     }
@@ -147,9 +147,9 @@ uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
         /* If lower and upper are the same, it means we are at the bottom of the
          * tree. then try to mute that device */
         if (lower == upper) {
-            Serial.print("At leaf... Try to mute ");
-            debug_print_uid(lower);
-            Serial.println();
+            serial_print("At leaf... Try to mute ");
+            serial_print_uid(lower);
+            serial_println();
             uid = lower;
             if (rdm_discovery_mute_device(rx, uid)) {
                 /* add the device to the list if it was not already in the list

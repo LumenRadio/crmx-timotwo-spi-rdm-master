@@ -1,7 +1,7 @@
 #include "discovery.h"
 
+#include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
-#include "../util/debug_print.h"
 #include "../util/uid_list.h"
 #include "radio_discovery.h"
 #include "rdm_discovery.h"
@@ -25,12 +25,12 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
     uint64_t uid;
     uint16_t n_found = 0;
 
-    Serial.println();
-    Serial.println();
-    Serial.println();
-    Serial.println();
+    serial_println();
+    serial_println();
+    serial_println();
+    serial_println();
 
-    Serial.println("Discovering radio receivers....");
+    serial_println("Discovering radio receivers....");
     /* Unmuting all receivers */
     radio_discovery_unmute_all();
     radio_discovery_unmute_all();
@@ -55,11 +55,11 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
      */
     n_found = radio_discovery_discover_sub_tree(&radios, 0, 0x0000FFFFFFFFFFFF);
 
-    Serial.print("Found ");
-    Serial.print(n_found);
-    Serial.print(" new radios (");
-    Serial.print(radios.count);
-    Serial.println(" in total).");
+    serial_print("Found ");
+    serial_print(n_found);
+    serial_print(" new radios (");
+    serial_print(radios.count);
+    serial_println(" in total).");
 
     /* There's some differences in how to get the RDM devices between W-DMX and
      * CRMX */
@@ -70,9 +70,9 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
         /* go through all found receivers and fethc the devices */
         for (int i = 0; i < radios.count; i++) {
             int8_t new_found = -1, retries = 2;
-            Serial.print("Fetch devices from ");
-            debug_print_uid(radios.items[i]);
-            Serial.print("... ");
+            serial_print("Fetch devices from ");
+            serial_print_uid(radios.items[i]);
+            serial_print("... ");
             while (new_found < 0) {
                 new_found = rdm_discovery_fetch_devices_from_wdmx_receiver(
                     &rdm_devices, radios.items[i]);
@@ -85,14 +85,14 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
                     }
                 }
             }
-            Serial.print("Got ");
-            Serial.print(new_found);
-            Serial.println(" devices...");
+            serial_print("Got ");
+            serial_print(new_found);
+            serial_println(" devices...");
         }
 
-        Serial.print("Found ");
-        Serial.print(rdm_devices.count);
-        Serial.println(" devices in total.");
+        serial_print("Found ");
+        serial_print(rdm_devices.count);
+        serial_println(" devices in total.");
     } else { // CRMX
         /* Loop over all receivers to do RDM discovery downstream */
         rdm_discovery_unmute_all();
@@ -118,21 +118,21 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
         for (int i = 0; i < radios.count; i++) {
             /* run discovery on each receiver */
             uint16_t new_found = 0;
-            Serial.print("Running discovery on ");
-            debug_print_uid(radios.items[i]);
-            Serial.println("...");
+            serial_print("Running discovery on ");
+            serial_print_uid(radios.items[i]);
+            serial_println("...");
             new_found += rdm_discovery_discover_sub_tree(
                 &radios, &rdm_devices, radios.items[i], 0, 0x0000FFFFFFFFFFFF);
-            Serial.print("Found ");
-            Serial.print(new_found);
-            Serial.println(" new...");
+            serial_print("Found ");
+            serial_print(new_found);
+            serial_println(" new...");
             n_found += new_found;
         }
 
-        Serial.print("Found ");
-        Serial.print(n_found);
-        Serial.print(" new devices (");
-        Serial.print(rdm_devices.count);
-        Serial.println(" in total).");
+        serial_print("Found ");
+        serial_print(n_found);
+        serial_print(" new devices (");
+        serial_print(rdm_devices.count);
+        serial_println(" in total).");
     }
 }

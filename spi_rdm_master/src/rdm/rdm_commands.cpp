@@ -1,5 +1,6 @@
 #include "rdm_commands.h"
 
+#include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
 #include "rdm_protocol.h"
 
@@ -41,7 +42,7 @@ void rdm_commands_print_manufacturer_label(uint64_t rx, uint64_t uid) {
         if ((resp.responseType == RESPONSE_TYPE_ACK) &&
             (resp.parameterId == MANUFACTURER_LABEL)) {
             for (int i = 0; i < resp.parameterDataLength; i++) {
-                Serial.print((char)resp.parameterData[i]);
+                serial_print((char)resp.parameterData[i]);
             }
         }
     }
@@ -85,7 +86,7 @@ void rdm_commands_print_device_model_description(uint64_t rx, uint64_t uid) {
         if ((resp.responseType == RESPONSE_TYPE_ACK) &&
             (resp.parameterId == DEVICE_MODEL_DESCRIPTION)) {
             for (int i = 0; i < resp.parameterDataLength; i++) {
-                Serial.print((char)resp.parameterData[i]);
+                serial_print((char)resp.parameterData[i]);
             }
         }
     }

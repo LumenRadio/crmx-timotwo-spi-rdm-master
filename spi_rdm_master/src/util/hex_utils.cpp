@@ -1,4 +1,5 @@
 #include "hex_utils.h"
+#include "../serial/serial.h"
 
 uint8_t hex_utils_nibble_to_val(char ascii) {
     if (ascii >= '0' && ascii <= '9') {
@@ -8,10 +9,10 @@ uint8_t hex_utils_nibble_to_val(char ascii) {
     } else if (ascii >= 'a' && ascii <= 'f') {
         return ascii - 'a' + 10;
     }
-    Serial.print("! ");
-    Serial.print("0x");
-    Serial.print(ascii, HEX);
-    Serial.println(" is not a valid hex symbol");
+    serial_print("! ");
+    serial_print("0x");
+    serial_print(ascii, HEX);
+    serial_println(" is not a valid hex symbol");
     return 0;
 }
 
