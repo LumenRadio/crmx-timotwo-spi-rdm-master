@@ -9,7 +9,7 @@
 void rdm_discovery_unmute_all() {
     RdmRequest req;
 
-    rdm_protocol_fill_packet(&req, 0x00FFFFFFFFFFFF);
+    rdm_protocol_fill_packet(&req, BROADCAST_ALL_DEVICES_ID);
 
     req.commandClass = DISCOVERY_COMMAND;
     req.parameterId = RDM_PROTOCOL_SWAP16(DISC_UN_MUTE);

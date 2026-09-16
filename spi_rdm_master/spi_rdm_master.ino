@@ -147,11 +147,11 @@ static void print_device_menu() {
         serial_print(") ");
         serial_print_uid(discovery_device_uid(i - 1));
         serial_print(" ");
-        rdm_commands_print_manufacturer_label(0x00FFFFFFFFFFFF,
+        rdm_commands_print_manufacturer_label(BROADCAST_ALL_DEVICES_ID,
                                               discovery_device_uid(i - 1));
         serial_print(" ");
         rdm_commands_print_device_model_description(
-            0x00FFFFFFFFFFFF, discovery_device_uid(i - 1));
+            BROADCAST_ALL_DEVICES_ID, discovery_device_uid(i - 1));
         serial_println();
     }
 
@@ -170,14 +170,14 @@ static void identify_device(uint64_t uid) {
     serial_print("Identifying ");
     serial_print_uid(uid);
     serial_println("...");
-    rdm_commands_identify(0x00FFFFFFFFFFFF, uid, true);
+    rdm_commands_identify(BROADCAST_ALL_DEVICES_ID, uid, true);
     for (int i = 0; i < 5; i++) {
         serial_print(5 - i);
         serial_print("... ");
         serial_flush();
         delay(1000);
     }
-    rdm_commands_identify(0x00FFFFFFFFFFFF, uid, false);
+    rdm_commands_identify(BROADCAST_ALL_DEVICES_ID, uid, false);
     serial_println("done");
 }
 

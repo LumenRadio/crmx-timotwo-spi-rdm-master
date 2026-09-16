@@ -25,6 +25,8 @@ typedef struct ALIGNED {
 #define SC_RDM 0xCC
 #define SC_SUB_MESSAGE 0x01
 
+#define BROADCAST_ALL_DEVICES_ID 0xFFFFFFFFFFFF
+
 /* Table A-1: Command Class Defines */
 #define DISCOVERY_COMMAND 0x10
 #define DISCOVERY_COMMAND_RESPONSE 0x11

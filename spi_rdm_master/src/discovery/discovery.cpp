@@ -1,5 +1,6 @@
 #include "discovery.h"
 
+#include "../rdm/e120.h"
 #include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
 #include "../util/uid_list.h"
@@ -101,7 +102,7 @@ void discovery_all(uint8_t rf_protocol, bool incremental) {
             /* if it's an incremental discovery we start off by muting all known
              * radios */
             for (int i = 0; i < rdm_devices.count; i++) {
-                if (!rdm_discovery_mute_device(0x00FFFFFFFFFFFF,
+                if (!rdm_discovery_mute_device(BROADCAST_ALL_DEVICES_ID,
                                                rdm_devices.items[i])) {
                     /* if we could not mute it, it's gone now - remove from list
                      */
