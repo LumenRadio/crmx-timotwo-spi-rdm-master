@@ -2,6 +2,7 @@
 
 #include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
+#include "../util/uid.h"
 #include "rdm_protocol.h"
 
 void rdm_commands_print_manufacturer_label(uint64_t rx, uint64_t uid) {
@@ -16,12 +17,7 @@ void rdm_commands_print_manufacturer_label(uint64_t rx, uint64_t uid) {
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
+    uid_serialize(tx_buffer, rx);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 
@@ -60,12 +56,7 @@ void rdm_commands_print_device_model_description(uint64_t rx, uint64_t uid) {
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
+    uid_serialize(tx_buffer, rx);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 
@@ -105,12 +96,7 @@ void rdm_commands_identify(uint64_t rx, uint64_t uid, bool state) {
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
+    uid_serialize(tx_buffer, rx);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 

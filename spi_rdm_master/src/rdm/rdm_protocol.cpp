@@ -1,5 +1,7 @@
 #include "rdm_protocol.h"
 
+#include "../util/uid.h"
+
 static uint8_t my_uid[6];
 static uint8_t rdm_tn = 0;
 
@@ -13,12 +15,7 @@ void rdm_protocol_fill_packet(RdmRequest *r, uint64_t dest) {
     r->messageCount = 0;
     r->subDevice = 0;
     memcpy(r->sourceUid, my_uid, 6);
-    r->destinationUid[0] = dest >> 40;
-    r->destinationUid[1] = dest >> 32;
-    r->destinationUid[2] = dest >> 24;
-    r->destinationUid[3] = dest >> 16;
-    r->destinationUid[4] = dest >> 8;
-    r->destinationUid[5] = dest;
+    uid_serialize(r->destinationUid, dest);
 }
 
 void rdm_protocol_set_length_and_checksum(RdmRequest *r) {

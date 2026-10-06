@@ -3,6 +3,7 @@
 #include "../rdm/rdm_protocol.h"
 #include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
+#include "../util/uid.h"
 #include "../util/uid_list.h"
 #include "radio_discovery.h"
 
@@ -17,12 +18,7 @@ void rdm_discovery_unmute_all() {
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = 0xFF;
-    tx_buffer[1] = 0xFF;
-    tx_buffer[2] = 0xFF;
-    tx_buffer[3] = 0xFF;
-    tx_buffer[4] = 0xFF;
-    tx_buffer[5] = 0xFF;
+    uid_serialize(tx_buffer, BROADCAST_ALL_DEVICES_ID);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 
@@ -47,12 +43,7 @@ bool rdm_discovery_mute_device(uint64_t rx, uint64_t uid) {
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
+    uid_serialize(tx_buffer, rx);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 
@@ -88,24 +79,9 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     serial_print_uid(upper);
     serial_println(")...");
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
-    tx_buffer[6] = lower >> 40;
-    tx_buffer[7] = lower >> 32;
-    tx_buffer[8] = lower >> 24;
-    tx_buffer[9] = lower >> 16;
-    tx_buffer[10] = lower >> 8;
-    tx_buffer[11] = lower;
-    tx_buffer[12] = upper >> 40;
-    tx_buffer[13] = upper >> 32;
-    tx_buffer[14] = upper >> 24;
-    tx_buffer[15] = upper >> 16;
-    tx_buffer[16] = upper >> 8;
-    tx_buffer[17] = upper;
+    uid_serialize(tx_buffer, rx);
+    uid_serialize(tx_buffer + 6, lower);
+    uid_serialize(tx_buffer + 12, upper);
     timo_spi_transfer(TIMO_RDM_DISCOVERY, rx_buffer, tx_buffer, 19);
 
     timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_DISC_FLAG);
@@ -119,12 +95,8 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
         serial_println("Collission.");
         return DiscoveryCollission;
     } else if (rx_buffer[0] == 3) {
-        uint64_t found_uid = 0;
+        uint64_t found_uid = uid_deserialize(rx_buffer + 1);
         serial_print("Found dev: ");
-        for (int i = 0; i < 6; i++) {
-            found_uid = found_uid << 8;
-            found_uid |= rx_buffer[1 + i];
-        }
         serial_print_uid(found_uid);
         serial_println();
         *uid = found_uid;
@@ -246,12 +218,7 @@ int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(UidList *rdm_devices,
 
     rdm_protocol_set_length_and_checksum(&req);
 
-    tx_buffer[0] = rx >> 40;
-    tx_buffer[1] = rx >> 32;
-    tx_buffer[2] = rx >> 24;
-    tx_buffer[3] = rx >> 16;
-    tx_buffer[4] = rx >> 8;
-    tx_buffer[5] = rx;
+    uid_serialize(tx_buffer, rx);
 
     memcpy(tx_buffer + 6, &req, req.messageLength + 2);
 
@@ -271,20 +238,8 @@ int8_t rdm_discovery_fetch_devices_from_wdmx_receiver(UidList *rdm_devices,
         if ((resp.responseType == RESPONSE_TYPE_ACK) &&
             (resp.parameterId == WDMX_RADIO_PROXIED_DEVICES)) {
             for (int i = 0; i < (resp.parameterDataLength / 8); i++) {
-                uint64_t uid;
-
-                uid = resp.parameterData[i * 8];
-                uid <<= 8;
-                uid |= resp.parameterData[i * 8 + 1];
-                uid <<= 8;
-                uid |= resp.parameterData[i * 8 + 2];
-                uid <<= 8;
-                uid |= resp.parameterData[i * 8 + 3];
-                uid <<= 8;
-                uid |= resp.parameterData[i * 8 + 4];
-                uid <<= 8;
-                uid |= resp.parameterData[i * 8 + 5];
-                /* next two bytes are mute flasg, ignore these */
+                /* next two bytes after the UID are mute flags, ignore these */
+                uint64_t uid = uid_deserialize(resp.parameterData + i * 8);
 
                 uid_list_add(rdm_devices, uid);
                 n_dev++;

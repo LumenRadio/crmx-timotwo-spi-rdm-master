@@ -1,7 +1,9 @@
 #include "radio_discovery.h"
 
+#include "../rdm/e120.h"
 #include "../serial/serial.h"
 #include "../timo_spi/timo_spi.h"
+#include "../util/uid.h"
 #include "../util/uid_list.h"
 
 DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
@@ -13,18 +15,8 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
     serial_print_uid(upper);
     serial_println(")...");
 
-    tx_buffer[0] = lower >> 40;
-    tx_buffer[1] = lower >> 32;
-    tx_buffer[2] = lower >> 24;
-    tx_buffer[3] = lower >> 16;
-    tx_buffer[4] = lower >> 8;
-    tx_buffer[5] = lower;
-    tx_buffer[6] = upper >> 40;
-    tx_buffer[7] = upper >> 32;
-    tx_buffer[8] = upper >> 24;
-    tx_buffer[9] = upper >> 16;
-    tx_buffer[10] = upper >> 8;
-    tx_buffer[11] = upper;
+    uid_serialize(tx_buffer, lower);
+    uid_serialize(tx_buffer + 6, upper);
     timo_spi_transfer(TIMO_RADIO_DISCOVERY, rx_buffer, tx_buffer, 13);
 
     timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RADIO_DISC_FLAG);
@@ -38,12 +30,8 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
         serial_println("Collission.");
         return DiscoveryCollission;
     } else if (rx_buffer[0] == 3) {
-        uint64_t found_uid = 0;
+        uint64_t found_uid = uid_deserialize(rx_buffer + 1);
         serial_print("Found dev: ");
-        for (int i = 0; i < 6; i++) {
-            found_uid = found_uid << 8;
-            found_uid |= rx_buffer[1 + i];
-        }
         serial_print_uid(found_uid);
         serial_println();
         *uid = found_uid;
@@ -58,12 +46,7 @@ bool radio_discovery_mute(uint64_t uid) {
     serial_print_uid(uid);
     serial_println("...");
 
-    tx_buffer[0] = uid >> 40;
-    tx_buffer[1] = uid >> 32;
-    tx_buffer[2] = uid >> 24;
-    tx_buffer[3] = uid >> 16;
-    tx_buffer[4] = uid >> 8;
-    tx_buffer[5] = uid;
+    uid_serialize(tx_buffer, uid);
     tx_buffer[6] = 1;
     timo_spi_transfer(TIMO_RADIO_MUTE, rx_buffer, tx_buffer, 8);
 
@@ -83,12 +66,7 @@ bool radio_discovery_mute(uint64_t uid) {
 void radio_discovery_unmute_all(void) {
     serial_println("Unmuting all radios...");
 
-    tx_buffer[0] = 0xFF;
-    tx_buffer[1] = 0xFF;
-    tx_buffer[2] = 0xFF;
-    tx_buffer[3] = 0xFF;
-    tx_buffer[4] = 0xFF;
-    tx_buffer[5] = 0xFF;
+    uid_serialize(tx_buffer, BROADCAST_ALL_DEVICES_ID);
     tx_buffer[6] = 0;
     timo_spi_transfer(TIMO_RADIO_MUTE, rx_buffer, tx_buffer, 8);
 
