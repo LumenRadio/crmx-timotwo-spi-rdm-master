@@ -233,6 +233,13 @@ int16_t timo_spi_transfer_with_retries(uint8_t command, uint8_t *dst,
                                        uint8_t max_retries);
 
 /**
+ * Large enough to hold a result byte, followed by the largest possible RDM
+ * response (header + max parameter data + checksum), with a small margin.
+ * Intended as the max_len argument to timo_spi_transfer_rdm_response().
+ */
+#define TIMO_RDM_RESPONSE_MAX_LEN 260
+
+/**
  * This is a specialized version of the SPI transfer function for RDM responses.
  * It checks the length field of the RDM response to know how much data to
  * transfer.

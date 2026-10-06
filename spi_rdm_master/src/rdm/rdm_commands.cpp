@@ -31,7 +31,7 @@ void rdm_commands_print_manufacturer_label(uint64_t rx, uint64_t uid) {
     timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
-                                   260);
+                                   TIMO_RDM_RESPONSE_MAX_LEN);
 
     /* result code 1 means we got an answer */
     if (rx_buffer[0] == 1) {
@@ -75,7 +75,7 @@ void rdm_commands_print_device_model_description(uint64_t rx, uint64_t uid) {
     timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
-                                   260);
+                                   TIMO_RDM_RESPONSE_MAX_LEN);
 
     /* result code 1 means we got an answer */
     if (rx_buffer[0] == 1) {
@@ -120,5 +120,5 @@ void rdm_commands_identify(uint64_t rx, uint64_t uid, bool state) {
     timo_spi_wait_for_extended_irq(TIMO_EXTIRQ_SPI_RDM_FLAG);
 
     timo_spi_transfer_rdm_response(TIMO_READ_RDM_COMMAND, rx_buffer, tx_buffer,
-                                   260);
+                                   TIMO_RDM_RESPONSE_MAX_LEN);
 }
