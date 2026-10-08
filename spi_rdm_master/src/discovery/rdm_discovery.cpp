@@ -91,10 +91,14 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     if (rx_buffer[0] == 1) {
         serial_println("No response.");
         return DiscoveryNone;
-    } else if (rx_buffer[0] == 2) {
+    }
+
+    if (rx_buffer[0] == 2) {
         serial_println("Collission.");
         return DiscoveryCollission;
-    } else if (rx_buffer[0] == 3) {
+    }
+
+    if (rx_buffer[0] == 3) {
         uint64_t found_uid = uid_deserialize(rx_buffer + 1);
         serial_print("Found dev: ");
         serial_print_uid(found_uid);

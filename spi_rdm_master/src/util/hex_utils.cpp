@@ -4,9 +4,13 @@
 uint8_t hex_utils_nibble_to_val(char ascii) {
     if (ascii >= '0' && ascii <= '9') {
         return ascii - '0';
-    } else if (ascii >= 'A' && ascii <= 'F') {
+    }
+
+    if (ascii >= 'A' && ascii <= 'F') {
         return ascii - 'A' + 10;
-    } else if (ascii >= 'a' && ascii <= 'f') {
+    }
+
+    if (ascii >= 'a' && ascii <= 'f') {
         return ascii - 'a' + 10;
     }
     serial_print("! ");
