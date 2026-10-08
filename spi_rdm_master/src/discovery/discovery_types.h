@@ -3,7 +3,7 @@
 
 typedef enum {
     DiscoveryUid,
-    DiscoveryCollission,
+    DiscoveryCollision,
     DiscoveryNone,
 } DiscoveryResponseType;
 

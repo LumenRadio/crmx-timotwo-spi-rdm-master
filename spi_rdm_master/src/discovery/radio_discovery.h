@@ -11,7 +11,7 @@
  *
  * Return values:
  *    DiscoveryNone         Empty response
- *    DiscoveryCollission   Collission
+ *    DiscoveryCollision    Collision
  *    DiscoveryUid          Single UID response
  *
  * @param lower   The lower end of the search span

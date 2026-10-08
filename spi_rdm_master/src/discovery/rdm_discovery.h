@@ -26,7 +26,7 @@ bool rdm_discovery_mute_device(uint64_t rx, uint64_t uid);
  *
  * Return values:
  *    DiscoveryNone         Empty response
- *    DiscoveryCollission   Collission
+ *    DiscoveryCollision    Collision
  *    DiscoveryUid          Single UID response
  *
  * @param rx      The UID of the receiver that we are performing the discover

@@ -29,8 +29,8 @@ DiscoveryResponseType radio_discovery_dub(uint64_t lower, uint64_t upper,
     }
 
     if (rx_buffer[0] == 2) {
-        serial_println("Collission.");
-        return DiscoveryCollission;
+        serial_println("Collision.");
+        return DiscoveryCollision;
     }
 
     if (rx_buffer[0] == 3) {
@@ -100,9 +100,9 @@ uint16_t radio_discovery_discover_sub_tree(UidList *radios, uint64_t lower,
             return n_found;
         }
 
-        /* If there was collissions we need to branch further down in the binary
+        /* If there was collisions we need to branch further down in the binary
          * tree */
-        if (dub_resp == DiscoveryCollission) {
+        if (dub_resp == DiscoveryCollision) {
             uint64_t mid = (lower + upper) / 2;
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of

@@ -94,8 +94,8 @@ DiscoveryResponseType rdm_discovery_dub(uint64_t rx, uint64_t lower,
     }
 
     if (rx_buffer[0] == 2) {
-        serial_println("Collission.");
-        return DiscoveryCollission;
+        serial_println("Collision.");
+        return DiscoveryCollision;
     }
 
     if (rx_buffer[0] == 3) {
@@ -151,9 +151,9 @@ uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
             return n_found;
         }
 
-        /* If there was collissions we need to branch further down in the binary
+        /* If there was collisions we need to branch further down in the binary
          * tree */
-        if (dub_resp == DiscoveryCollission) {
+        if (dub_resp == DiscoveryCollision) {
             uint64_t mid = (lower + upper) / 2;
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of
@@ -175,21 +175,21 @@ uint16_t rdm_discovery_discover_sub_tree(UidList *radios, UidList *rdm_devices,
                     n_found++;
                 } else {
                     /* if device was already in the list, but could be muted -
-                     * this means we got a rough response caused by collissions
+                     * this means we got a rough response caused by collisions
                      */
-                    dub_resp = DiscoveryCollission;
+                    dub_resp = DiscoveryCollision;
                 }
             } else {
                 /* if device could not be muted - this means we got a rough
-                 * response caused by collissions
+                 * response caused by collisions
                  */
-                dub_resp = DiscoveryCollission;
+                dub_resp = DiscoveryCollision;
             }
         }
 
-        /* If there was collissions we need to branch further down in the binary
+        /* If there was collisions we need to branch further down in the binary
          * tree */
-        if (dub_resp == DiscoveryCollission) {
+        if (dub_resp == DiscoveryCollision) {
             uint64_t mid = (lower + upper) / 2;
             /* the total amount of devices found in this part of the tree is the
              * sum of: the number of devices we already found + the number of
